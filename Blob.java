@@ -8,7 +8,6 @@
  *  Partner Precept: P11
  *
  *  Description:  ADD ACCURATE STUFF
- *
  **************************************************************************** */
 
 public class Blob {
@@ -19,16 +18,17 @@ public class Blob {
     private int mass = 0;
 
     // stores initial center of mass coordinates
-    private int[] cntrMass = {0,0};
+    private double[] cntrMass = {0.0,0.0};
 
     // empty blob object
     public Blob() {
     }
 
+    // adds pixels to blob and modifies CoM and mass to account
     public void add(int x, int y) {
-        // modifies center of gravity of the blob
-        cntrMass[0] = cntrMass[0] * mass + x / (mass+ 1);
-        cntrMass[1] = cntrMass[1] * mass + y / (mass+ 1);
+        // modifies center of mass of the blob
+        cntrMass[0] = (cntrMass[0] * mass + x) / (mass+ 1);
+        cntrMass[1] = (cntrMass[1] * mass + y) / (mass+ 1);
 
         // creates new coordinate array
         int[] ptcoord = new int[2];
@@ -40,19 +40,48 @@ public class Blob {
         mass++;
     }
 
+    // returns mass
     public int mass() {
         return mass;
     }
 
+    // returns distance between CoM of two blobs
     public double distanceTo(Blob that) {
-
+        double dX = Math.abs(that.cntrMass[0] - cntrMass[0]);
+        double dY = Math.abs(that.cntrMass[1] - cntrMass[1]);
+        return (Math.sqrt(Math.pow(dX, 2) + Math.pow(dY, 2)));
     }
 
     public String toString() {
-
+        String formX = String.format("%.4f", cntrMass[0]);
+        String formY = String.format("%.4f", cntrMass[1]);
+        return (mass() + " (" + formX + ", " + formY + ")");
     }
 
     public static void main(String[] args) {
+        Blob test = new Blob();
+        for (int i = -4; i <=4; i++) {
+            test.add(i, i);
+        }
 
+        // checks functionality of mass()
+        System.out.print("mass(): ");
+        if (test.mass == 9) {
+            System.out.println("*");
+        } else System.out.println();
+
+
+        Blob test2 = new Blob();
+        for (int i = -4; i <= 4; i++) {
+            test2.add(i, i);
+        }
+
+        // checks functionality of distanceTo()
+        System.out.print("distanceTo(): ");
+        if(test2.distanceTo(test) == 0) {
+            System.out.println("*");
+        } else System.out.println();
+
+        System.out.println(test.toString() + "\n" + test2.toString());
     }
 }
