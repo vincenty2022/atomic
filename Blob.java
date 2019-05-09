@@ -7,18 +7,22 @@
  *  Partner NetID:   lmzuniga
  *  Partner Precept: P11
  *
- *  Description:  ADD ACCURATE STUFF
+ *  Description: (i) read an image, (ii) classify the pixels as foreground or
+ *  background, and (iii) find the disc-shaped clumps of foreground pixels that
+ *  constitute each bead.
  **************************************************************************** */
 
 public class Blob {
     // queue that stores all points in the blob in order of adding
-    private Queue<int[]> coords = new Queue<int[]>();
+    //  private Queue<int[]> coords = new Queue<int[]>();
 
     // stores the mass of the blob
     private int mass = 0;
 
-    // stores initial center of mass coordinates
-    private double[] cntrMass = { 0.0, 0.0 };
+    // stores initial center of mass coordinate X
+    private double cntrX = 0.0;
+    // Stores initial center of mass coordinate y
+    private double cntrY = 0.0;
 
     // empty blob object
     public Blob() {
@@ -27,14 +31,14 @@ public class Blob {
     // adds pixels to blob and modifies CoM and mass to account
     public void add(int x, int y) {
         // modifies center of mass of the blob
-        cntrMass[0] = (cntrMass[0] * mass + x) / (mass + 1);
-        cntrMass[1] = (cntrMass[1] * mass + y) / (mass + 1);
+        cntrX = (cntrX * mass + x) / (mass + 1);
+        cntrY = (cntrY * mass + y) / (mass + 1);
 
         // creates new coordinate array
-        int[] ptcoord = new int[2];
-        ptcoord[0] = x;
-        ptcoord[1] = y;
-        coords.enqueue(ptcoord);
+        // int[] ptcoord = new int[2];
+        // ptcoord[0] = x;
+        // ptcoord[1] = y;
+        // coords.enqueue(ptcoord);
 
         // increments mass
         mass++;
@@ -47,14 +51,15 @@ public class Blob {
 
     // returns distance between CoM of two blobs
     public double distanceTo(Blob that) {
-        double dX = Math.abs(that.cntrMass[0] - cntrMass[0]);
-        double dY = Math.abs(that.cntrMass[1] - cntrMass[1]);
+        double dX = Math.abs(that.cntrX - cntrX);
+        double dY = Math.abs(that.cntrY - cntrY);
         return (Math.sqrt(Math.pow(dX, 2) + Math.pow(dY, 2)));
     }
 
+    // Returns the Coordinates of center of mass in String form.
     public String toString() {
-        String formX = String.format("%.4f", cntrMass[0]);
-        String formY = String.format("%.4f", cntrMass[1]);
+        String formX = String.format("%.4f", cntrX);
+        String formY = String.format("%.4f", cntrY);
         return (mass() + " (" + formX + ", " + formY + ")");
     }
 
@@ -85,5 +90,6 @@ public class Blob {
         else System.out.println();
 
         System.out.println(test.toString() + "\n" + test2.toString());
+        StdOut.println(test.mass());
     }
 }

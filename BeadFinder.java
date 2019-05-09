@@ -11,24 +11,27 @@
  *
  **************************************************************************** */
 
-import java.awt.Color;
-
 public class BeadFinder {
     // defensive copy
-    private Picture pic;
+    private final Picture pic;
     // tau
-    private double T;
+    private final double t;
     // 1 for marked, 0 for unmarked
     private int[][] marked;
+    // // pixel height in the picture
+    // private final int h;
+    // // pixel width in the picture
+    // private final int w;
+
     // blob storage
-    private Queue<Blob> blobStor = new Queue<Blob>();
+    private final Queue<Blob> blobStor = new Queue<Blob>();
 
     // creates BeadFinder ojbect
     public BeadFinder(Picture picture, double tau) {
-        int w = picture.width();
         int h = picture.height();
+        int w = picture.width();
         marked = new int[h][w];
-        T = tau;
+        t = tau;
 
         // defensive copy
         pic = new Picture(w, h);
@@ -40,14 +43,15 @@ public class BeadFinder {
 
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
-                // if Lum is >= T, and unmarked, make a new blob and dfs
-                if (!(getLum(pic.get(x, y)) < T) && !ynMarked(x, y)) {
+                double intensity = Luminance.intensity(pic.get(x, y));
+
+                if (!(intensity < t) && !ynMarked(x, y)) {
                     Blob current = new Blob();
                     dfs(x, y, current);
                     blobStor.enqueue(current);
                 }
-                // if Lum < T and unmarked, mark it
-                else if (getLum(pic.get(x, y)) < T && ynMarked(x, y)) {
+                // if Lum < t and unmarked, mark it
+                else if (intensity < t && ynMarked(x, y)) {
                     marked[y][x] = 1;
                 }
             }
@@ -56,19 +60,30 @@ public class BeadFinder {
 
     // recursive finding of pixels in a blob
     private void dfs(int x, int y, Blob current) {
-        if ((getLum(pic.get(x, y)) < T) && !ynMarked(x, y)) {
+        if (y < 0 || y >= pic.height() || x < 0 || x >= pic.width()
+                || ynMarked(x, y)) {
+            return;
+        }
+        double intensity = Luminance.intensity(pic.get(x, y));
+        if (intensity < t) {
+            return;
+        }
+        if (!(intensity < t)) {
             // add to the blob
             current.add(x, y);
+            marked[y][x] = 1;
 
-            // recursion
-            dfs(x, y-1, current);
-            dfs(x, y+1, current);
-            dfs(x-1, y, current);
-            dfs(x+1, y, current);
+            // StdDraw.point(x, y);
+            // StdDraw.show();
+            dfs(x, y + 1, current);
+            dfs(x, y - 1, current);
+
+            dfs(x + 1, y, current);
+            dfs(x - 1, y, current);
 
             // mark this point
-            marked[y][x] = 1;
         }
+
     }
 
     // checks to see if a given point has been marked
@@ -81,20 +96,12 @@ public class BeadFinder {
         return true;
     }
 
-    // get luminosity of given color
-    private double getLum(Color color) {
-        int r = color.getRed();
-        int g = color.getGreen();
-        int b = color.getBlue();
-
-        return (0.299*r + 0.587*g + 0.114*b);
-    }
-
     // returns matrix containing blobs of at least 'min' size
     public Blob[] getBeads(int min) {
+        int initSize = blobStor.size();
         // copy instance's queue
         Queue<Blob> defblobStor = new Queue<Blob>();
-        for (int i = 0; i < blobStor.size(); i++) {
+        for (int i = 0; i < initSize; i++) {
             Blob temp = blobStor.dequeue();
             defblobStor.enqueue(temp);
             blobStor.enqueue(temp);
@@ -103,19 +110,38 @@ public class BeadFinder {
         int sizeInit = defblobStor.size();
         for (int i = 0; i < sizeInit; i++) {
             Blob temp = defblobStor.dequeue();
-            if (!(temp.mass() < min)) {
+            if (temp.mass() >= min) {
                 defblobStor.enqueue(temp);
             }
         }
-
         Blob[] blobArr = new Blob[defblobStor.size()];
-        for (int i = 0; i < defblobStor.size(); i++) {
+        // StringBuilder sb = new StringBuilder();
+
+        int size = defblobStor.size();
+        for (int i = 0; i < size; i++) {
             blobArr[i] = defblobStor.dequeue();
+            // StdOut.println(blobArr[i]);
+            // sb.append(blobArr[i]);
+            // sb.append("\n");
         }
+
+        //  StdOut.println(sb.toString());
         return blobArr;
     }
 
     public static void main(String[] args) {
+        int min = Integer.parseInt(args[0]);
+        double tau = Double.parseDouble(args[1]);
+        Picture pic = new Picture(args[2]);
+
+        // StdDraw.setXscale(0, pic.width());
+        // StdDraw.setYscale(0, pic.height());
+
+
+        BeadFinder test = new BeadFinder(pic, tau);
+        test.getBeads(min);
+
+        // StdOut.println(Arrays.toString(test.getBeads(min)));
 
     }
 }
