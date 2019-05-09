@@ -7,24 +7,21 @@
  *  Partner NetID:   lmzuniga
  *  Partner Precept: P11
  *
- *  Description:  ADD ACCURATE STUFF
+ *  Description: (i) read an image, (ii) classify the pixels as foreground or
+ *  background, and (iii) find the disc-shaped clumps of foreground pixels that
+ *  constitute each bead.
  *
  **************************************************************************** */
 
 public class BeadFinder {
-    // defensive copy
+    // stores original picture
     private final Picture pic;
     // tau
     private final double t;
     // 1 for marked, 0 for unmarked
     private int[][] marked;
-    // // pixel height in the picture
-    // private final int h;
-    // // pixel width in the picture
-    // private final int w;
-
     // blob storage
-    private final Queue<Blob> blobStor = new Queue<Blob>();
+    private final ST<Integer, Blob> blobStor = new ST<Integer, Blob>();
 
     // creates BeadFinder ojbect
     public BeadFinder(Picture picture, double tau) {
@@ -41,6 +38,7 @@ public class BeadFinder {
             }
         }
 
+        int count = 0;
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
                 double intensity = Luminance.intensity(pic.get(x, y));
@@ -48,7 +46,8 @@ public class BeadFinder {
                 if (!(intensity < t) && !ynMarked(x, y)) {
                     Blob current = new Blob();
                     dfs(x, y, current);
-                    blobStor.enqueue(current);
+                    blobStor.put(count, current);
+                    count++;
                 }
                 // if Lum < t and unmarked, mark it
                 else if (intensity < t && ynMarked(x, y)) {
@@ -73,15 +72,11 @@ public class BeadFinder {
             current.add(x, y);
             marked[y][x] = 1;
 
-            // StdDraw.point(x, y);
-            // StdDraw.show();
+            // recursion
             dfs(x, y + 1, current);
             dfs(x, y - 1, current);
-
             dfs(x + 1, y, current);
             dfs(x - 1, y, current);
-
-            // mark this point
         }
 
     }
@@ -98,35 +93,38 @@ public class BeadFinder {
 
     // returns matrix containing blobs of at least 'min' size
     public Blob[] getBeads(int min) {
-        int initSize = blobStor.size();
-        // copy instance's queue
-        Queue<Blob> defblobStor = new Queue<Blob>();
-        for (int i = 0; i < initSize; i++) {
-            Blob temp = blobStor.dequeue();
-            defblobStor.enqueue(temp);
-            blobStor.enqueue(temp);
+        // creates defensive copy
+        ST<Integer, Blob> defblobStor = new ST<Integer, Blob>();
+        for (int key: blobStor.keys()) {
+            Blob temp = blobStor.get(key);
+            defblobStor.put(key, temp);
         }
 
-        int sizeInit = defblobStor.size();
-        for (int i = 0; i < sizeInit; i++) {
-            Blob temp = defblobStor.dequeue();
-            if (temp.mass() >= min) {
-                defblobStor.enqueue(temp);
+        // removes blobs that do not meet minimum
+        for (int key: blobStor.keys()) {
+            if (blobStor.get(key).mass() < min) {
+                defblobStor.remove(key);
             }
         }
+
+        // storage blob array
         Blob[] blobArr = new Blob[defblobStor.size()];
-        // StringBuilder sb = new StringBuilder();
 
-        int size = defblobStor.size();
-        for (int i = 0; i < size; i++) {
-            blobArr[i] = defblobStor.dequeue();
-            // StdOut.println(blobArr[i]);
-            // sb.append(blobArr[i]);
-            // sb.append("\n");
+        int i = 0;
+        for (int key: defblobStor.keys()) {
+            blobArr[i] = defblobStor.get(key);
+            i++;
         }
-
-        //  StdOut.println(sb.toString());
         return blobArr;
+    }
+
+    // returns printablle string given a min value
+    private String toString(int min) {
+        StringBuilder string = new StringBuilder();
+        for (int i = 0; i < getBeads(min).length; i++) {
+            string.append(getBeads(min)[i] + "\n");
+        }
+        return string.toString();
     }
 
     public static void main(String[] args) {
@@ -134,14 +132,9 @@ public class BeadFinder {
         double tau = Double.parseDouble(args[1]);
         Picture pic = new Picture(args[2]);
 
-        // StdDraw.setXscale(0, pic.width());
-        // StdDraw.setYscale(0, pic.height());
-
-
         BeadFinder test = new BeadFinder(pic, tau);
         test.getBeads(min);
 
-        // StdOut.println(Arrays.toString(test.getBeads(min)));
-
+        System.out.println(test.toString(min));
     }
 }
