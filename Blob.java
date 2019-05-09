@@ -7,9 +7,9 @@
  *  Partner NetID:   lmzuniga
  *  Partner Precept: P11
  *
- *  Description: (i) read an image, (ii) classify the pixels as foreground or
- *  background, and (iii) find the disc-shaped clumps of foreground pixels that
- *  constitute each bead.
+ *  Description: Creates Blob object that acts as helper object for use in
+ *  BeadFinder.java
+ *
  **************************************************************************** */
 
 public class Blob {
