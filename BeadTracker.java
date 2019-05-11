@@ -13,25 +13,25 @@
  **************************************************************************** */
 public class BeadTracker {
     // returns distance between each blob in picture t1 and the nearest blob in t0
-    public static String printDist (Picture t0, Picture t1, int min, double tau, double delta) {
+    public static void printDist (Picture t0, Picture t1, int min, double tau, double delta) {
         BeadFinder t1BF = new BeadFinder(t1, tau);
         BeadFinder t0BF = new BeadFinder(t0, tau);
 
         Blob[] t1Blob = t1BF.getBeads(min);
         Blob[] t0Blob = t0BF.getBeads(min);
 
-        StringBuilder allminDist = new StringBuilder();
         for (int i = 0; i < t1Blob.length; i++) {
-            double minDist = Double.POSITIVE_INFINITY;
+            double minDist = delta;
+            boolean lsDelta = false;
             for (int j = 0; j < t0Blob.length; j++) {
                 double currDist = t1Blob[i].distanceTo(t0Blob[j]);
                 if(currDist < minDist) {
+                    lsDelta = true;
                     minDist = currDist;
                 }
             }
-            if (!(minDist > delta)) allminDist.append(String.format("%.4f",minDist) + "\n");
+            if (lsDelta) System.out.print(String.format("%.4f",minDist) + "\n");
         }
-        return allminDist.toString();
     }
 
     public static void main(String[] args) {
@@ -43,7 +43,7 @@ public class BeadTracker {
         for (int i = 4; i < args.length; i++) {
             Picture t1 = new Picture(args[i]);
             Picture t0 = new Picture(args[i-1]);
-            System.out.println(printDist(t0, t1, min, tau, delta));
+            printDist(t0, t1, min, tau, delta);
         }
         System.out.println("time: "+ test.elapsedTime());
     }
